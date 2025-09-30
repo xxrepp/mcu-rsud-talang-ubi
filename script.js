@@ -5,10 +5,14 @@ let isTransitioning = false;
 let lastScrollTime = 0;
 let scrollAccumulator = 0;
 const SCROLL_THRESHOLD = 150; // Pixels needed to trigger page change
+let isMusicPlaying = false;
 
 // DOM Elements
 const pages = document.querySelectorAll('.page');
 const navItems = document.querySelectorAll('.nav-item');
+const backgroundMusic = document.getElementById('backgroundMusic');
+const musicToggle = document.getElementById('musicToggle');
+const musicIcon = document.getElementById('musicIcon');
 
 // Initialize the website
 document.addEventListener('DOMContentLoaded', function() {
@@ -23,6 +27,7 @@ function initializeWebsite() {
     setupTouchNavigation();
     setupKeyboardNavigation();
     preventDefaultScrolling();
+    setupMusicPlayer();
     
     // Force navigation positioning on mobile
     setTimeout(() => {
@@ -34,6 +39,63 @@ function initializeWebsite() {
     }, 100);
     
     console.log('Medical Check Up Website initialized successfully!');
+}
+
+// Setup Music Player
+function setupMusicPlayer() {
+    if (!backgroundMusic || !musicToggle || !musicIcon) {
+        console.warn('Music player elements not found');
+        return;
+    }
+    
+    // Set volume (adjust this value between 0.0 and 1.0)
+    backgroundMusic.volume = 0.3; // 30% volume
+    
+    // Auto-play music on user interaction
+    document.addEventListener('click', function playMusicOnce() {
+        if (!isMusicPlaying) {
+            backgroundMusic.play()
+                .then(() => {
+                    isMusicPlaying = true;
+                    musicIcon.className = 'fas fa-volume-up';
+                    musicToggle.classList.remove('muted');
+                    console.log('Background music started');
+                })
+                .catch(err => {
+                    console.log('Autoplay prevented:', err);
+                });
+            document.removeEventListener('click', playMusicOnce);
+        }
+    });
+    
+    // Music toggle button
+    musicToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleMusic();
+    });
+}
+
+function toggleMusic() {
+    if (!backgroundMusic) return;
+    
+    if (isMusicPlaying) {
+        backgroundMusic.pause();
+        isMusicPlaying = false;
+        musicIcon.className = 'fas fa-volume-mute';
+        musicToggle.classList.add('muted');
+        console.log('Music muted');
+    } else {
+        backgroundMusic.play()
+            .then(() => {
+                isMusicPlaying = true;
+                musicIcon.className = 'fas fa-volume-up';
+                musicToggle.classList.remove('muted');
+                console.log('Music playing');
+            })
+            .catch(err => {
+                console.error('Failed to play music:', err);
+            });
+    }
 }
 
 // Setup Event Listeners

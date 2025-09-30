@@ -10,6 +10,16 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+<!-- Background Music -->
+    <audio id="backgroundMusic" loop>
+        <source src="assets/background-music.mp3" type="audio/mpeg">
+    </audio>
+    
+    <!-- Music Control Button -->
+    <button class="music-control" id="musicToggle" aria-label="Toggle music">
+        <i class="fas fa-volume-up" id="musicIcon"></i>
+    </button>
+
     <!-- Page Navigation Menu -->
     <div class="page-navigation">
         <div class="nav-item active" data-page="0">
