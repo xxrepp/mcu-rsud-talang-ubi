@@ -50,23 +50,56 @@ function setupMusicPlayer() {
     
     // Set volume (adjust this value between 0.0 and 1.0)
     backgroundMusic.volume = 0.3; // 30% volume
-    
-    // Auto-play music on user interaction
-    document.addEventListener('click', function playMusicOnce() {
-        if (!isMusicPlaying) {
-            backgroundMusic.play()
-                .then(() => {
-                    isMusicPlaying = true;
-                    musicIcon.className = 'fas fa-volume-up';
-                    musicToggle.classList.remove('muted');
-                    console.log('Background music started');
-                })
-                .catch(err => {
-                    console.log('Autoplay prevented:', err);
-                });
-            document.removeEventListener('click', playMusicOnce);
-        }
-    });
+
+	// Try to autoplay immediately and via multiple passive fallbacks
+	const attemptAutoplay = () => {
+		if (!backgroundMusic || isMusicPlaying) return;
+		backgroundMusic.play()
+			.then(() => {
+				isMusicPlaying = true;
+				musicIcon.className = 'fas fa-volume-up';
+				musicToggle.classList.remove('muted');
+				console.log('Background music autoplayed');
+				removeAutoplayFallbacks();
+			})
+			.catch((err) => {
+				console.log('Autoplay attempt failed:', err && err.name ? err.name : err);
+			});
+	};
+
+	const removeAutoplayFallbacks = () => {
+		document.removeEventListener('click', attemptAutoplay, true);
+		document.removeEventListener('pointerdown', attemptAutoplay, true);
+		document.removeEventListener('keydown', attemptAutoplay, true);
+		document.removeEventListener('touchstart', attemptAutoplay, true);
+		document.removeEventListener('wheel', attemptAutoplay, true);
+		document.removeEventListener('mousemove', attemptAutoplay, true);
+		document.removeEventListener('visibilitychange', onVisibilityChange, true);
+		backgroundMusic.removeEventListener('canplay', attemptAutoplay, true);
+		window.removeEventListener('load', attemptAutoplay, true);
+	};
+
+	const onVisibilityChange = () => {
+		if (!document.hidden) {
+			attemptAutoplay();
+		}
+	};
+
+	// Immediate attempts
+	attemptAutoplay();
+	window.addEventListener('load', attemptAutoplay, { once: true, capture: true });
+	backgroundMusic.addEventListener('canplay', attemptAutoplay, { once: true, capture: true });
+	if (document.visibilityState !== 'visible') {
+		document.addEventListener('visibilitychange', onVisibilityChange, true);
+	}
+
+	// Passive user-gesture fallbacks (in case policy blocks autoplay)
+	document.addEventListener('click', attemptAutoplay, true);
+	document.addEventListener('pointerdown', attemptAutoplay, true);
+	document.addEventListener('keydown', attemptAutoplay, true);
+	document.addEventListener('touchstart', attemptAutoplay, true);
+	document.addEventListener('wheel', attemptAutoplay, true);
+	document.addEventListener('mousemove', attemptAutoplay, true);
     
     // Music toggle button
     musicToggle.addEventListener('click', function(e) {
