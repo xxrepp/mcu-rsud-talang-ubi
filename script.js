@@ -1,5 +1,3 @@
-// @xxrepp
-
 // Global Variables
 let currentPage = 0;
 const totalPages = 12;
@@ -25,6 +23,16 @@ function initializeWebsite() {
     setupTouchNavigation();
     setupKeyboardNavigation();
     preventDefaultScrolling();
+    
+    // Force navigation positioning on mobile
+    setTimeout(() => {
+        const navigation = document.querySelector('.page-navigation');
+        if (navigation && window.innerWidth <= 768) {
+            navigation.style.left = '50%';
+            navigation.style.transform = 'translateX(-50%)';
+        }
+    }, 100);
+    
     console.log('Medical Check Up Website initialized successfully!');
 }
 
@@ -515,5 +523,3 @@ console.log('Available functions:', { nextPage, previousPage, goToPage });
 console.log('Total pages:', totalPages);
 console.log('Pages found:', pages.length);
 console.log('Nav items found:', navItems.length);
-
-// @xxrepp
