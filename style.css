@@ -163,7 +163,8 @@ body {
     padding: 2rem;
     background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     max-width: 800px;
-    overflow-y: visible;
+    overflow: hidden;
+    user-select: none;
 }
 
 .logo-section {

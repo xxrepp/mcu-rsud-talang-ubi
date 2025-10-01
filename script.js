@@ -6,6 +6,8 @@ let lastScrollTime = 0;
 let scrollAccumulator = 0;
 const SCROLL_THRESHOLD = 150; // Pixels needed to trigger page change
 let isMusicPlaying = false;
+const PAGE_TRANSITION_DELAY = 800; // Time to wait before allowing next page change
+let lastPageChangeTime = 0;
 
 // DOM Elements
 const pages = document.querySelectorAll('.page');
@@ -79,7 +81,7 @@ function setupMusicPlayer() {
 
 // Setup play on first interaction
 function setupFirstInteractionPlay() {
-    const events = ['click', 'touchstart', 'keydown'];
+    const events = ['click', 'touchstart', 'keydown', 'wheel', 'touchmove', 'scroll'];
     
     const playOnce = () => {
         if (!isMusicPlaying) {
@@ -101,9 +103,9 @@ function setupFirstInteractionPlay() {
         }
     };
     
-    // Add listeners for multiple event types
+    // Add listeners for multiple event types including scroll
     events.forEach(event => {
-        document.addEventListener(event, playOnce, { once: true });
+        document.addEventListener(event, playOnce, { once: true, passive: true });
     });
 }
 
@@ -166,6 +168,12 @@ function setupScrollNavigation() {
     
     // Mouse wheel events with proper targeting and threshold
     document.addEventListener('wheel', function(e) {
+        // Prevent scrolling on opening page (page 0)
+        if (currentPage === 0) {
+            e.preventDefault();
+            return;
+        }
+        
         // Check if the scroll is happening inside a content card
         const contentElement = e.target.closest('.content');
         
@@ -186,6 +194,13 @@ function setupScrollNavigation() {
                 return;
             }
             
+            // At boundary - check if enough time has passed since last page change
+            const now = Date.now();
+            if (now - lastPageChangeTime < PAGE_TRANSITION_DELAY) {
+                console.log('Page transition cooldown active');
+                return;
+            }
+            
             // At boundary - accumulate scroll for threshold
             if ((e.deltaY > 0 && isAtBottom) || (e.deltaY < 0 && isAtTop)) {
                 e.preventDefault();
@@ -199,7 +214,6 @@ function setupScrollNavigation() {
                     
                     if (isTransitioning) return;
                     
-                    const now = Date.now();
                     if (now - lastScrollTime < 500) return; // Longer throttle for page changes
                     
                     lastScrollTime = now;
@@ -228,7 +242,13 @@ function setupScrollNavigation() {
         
         if (isTransitioning) return;
         
+        // Check page transition cooldown
         const now = Date.now();
+        if (now - lastPageChangeTime < PAGE_TRANSITION_DELAY) {
+            console.log('Page transition cooldown active');
+            return;
+        }
+        
         if (now - lastScrollTime < 300) return;
         
         lastScrollTime = now;
@@ -377,6 +397,7 @@ function goToPage(pageIndex) {
     }
     
     isTransitioning = true;
+    lastPageChangeTime = Date.now(); // Track page change time
     console.log('Navigating to page:', pageIndex);
     
     // Hide current page
