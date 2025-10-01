@@ -132,6 +132,22 @@ function toggleMusic() {
     }
 }
 
+// Helper function to try starting music
+function tryStartMusic() {
+    if (!isMusicPlaying && backgroundMusic) {
+        backgroundMusic.play()
+            .then(() => {
+                isMusicPlaying = true;
+                musicIcon.className = 'fas fa-volume-up';
+                musicToggle.classList.remove('muted');
+                console.log('Background music started on interaction');
+            })
+            .catch(err => {
+                // Silently fail - music will start on next valid interaction
+            });
+    }
+}
+
 // Setup Event Listeners
 function setupEventListeners() {
     // Navigation item clicks
@@ -157,6 +173,11 @@ function setupEventListeners() {
         ctaButton.addEventListener('click', function(e) {
             e.preventDefault();
             console.log('CTA button clicked');
+            
+            // Try to start music
+            tryStartMusic();
+            
+            // Navigate to next page
             goToPage(1); // Go to MCU Introduction page
         });
     }
@@ -168,6 +189,11 @@ function setupScrollNavigation() {
     
     // Mouse wheel events with proper targeting and threshold
     document.addEventListener('wheel', function(e) {
+        // Try to start music on scroll (before preventing default)
+        if (!isMusicPlaying) {
+            tryStartMusic();
+        }
+        
         // Prevent scrolling on opening page (page 0)
         if (currentPage === 0) {
             e.preventDefault();
