@@ -50,61 +50,60 @@ function setupMusicPlayer() {
     
     // Set volume (adjust this value between 0.0 and 1.0)
     backgroundMusic.volume = 0.3; // 30% volume
-
-	// Try to autoplay immediately and via multiple passive fallbacks
-	const attemptAutoplay = () => {
-		if (!backgroundMusic || isMusicPlaying) return;
-		backgroundMusic.play()
-			.then(() => {
-				isMusicPlaying = true;
-				musicIcon.className = 'fas fa-volume-up';
-				musicToggle.classList.remove('muted');
-				console.log('Background music autoplayed');
-				removeAutoplayFallbacks();
-			})
-			.catch((err) => {
-				console.log('Autoplay attempt failed:', err && err.name ? err.name : err);
-			});
-	};
-
-	const removeAutoplayFallbacks = () => {
-		document.removeEventListener('click', attemptAutoplay, true);
-		document.removeEventListener('pointerdown', attemptAutoplay, true);
-		document.removeEventListener('keydown', attemptAutoplay, true);
-		document.removeEventListener('touchstart', attemptAutoplay, true);
-		document.removeEventListener('wheel', attemptAutoplay, true);
-		document.removeEventListener('mousemove', attemptAutoplay, true);
-		document.removeEventListener('visibilitychange', onVisibilityChange, true);
-		backgroundMusic.removeEventListener('canplay', attemptAutoplay, true);
-		window.removeEventListener('load', attemptAutoplay, true);
-	};
-
-	const onVisibilityChange = () => {
-		if (!document.hidden) {
-			attemptAutoplay();
-		}
-	};
-
-	// Immediate attempts
-	attemptAutoplay();
-	window.addEventListener('load', attemptAutoplay, { once: true, capture: true });
-	backgroundMusic.addEventListener('canplay', attemptAutoplay, { once: true, capture: true });
-	if (document.visibilityState !== 'visible') {
-		document.addEventListener('visibilitychange', onVisibilityChange, true);
-	}
-
-	// Passive user-gesture fallbacks (in case policy blocks autoplay)
-	document.addEventListener('click', attemptAutoplay, true);
-	document.addEventListener('pointerdown', attemptAutoplay, true);
-	document.addEventListener('keydown', attemptAutoplay, true);
-	document.addEventListener('touchstart', attemptAutoplay, true);
-	document.addEventListener('wheel', attemptAutoplay, true);
-	document.addEventListener('mousemove', attemptAutoplay, true);
+    
+    // Try to autoplay immediately
+    const attemptAutoplay = () => {
+        backgroundMusic.play()
+            .then(() => {
+                isMusicPlaying = true;
+                musicIcon.className = 'fas fa-volume-up';
+                musicToggle.classList.remove('muted');
+                console.log('Background music autoplayed');
+            })
+            .catch(err => {
+                console.log('Autoplay attempt failed:', err.name);
+                // Set up listeners for first user interaction
+                setupFirstInteractionPlay();
+            });
+    };
+    
+    // Try autoplay after a short delay
+    setTimeout(attemptAutoplay, 100);
     
     // Music toggle button
     musicToggle.addEventListener('click', function(e) {
         e.stopPropagation();
         toggleMusic();
+    });
+}
+
+// Setup play on first interaction
+function setupFirstInteractionPlay() {
+    const events = ['click', 'touchstart', 'keydown'];
+    
+    const playOnce = () => {
+        if (!isMusicPlaying) {
+            backgroundMusic.play()
+                .then(() => {
+                    isMusicPlaying = true;
+                    musicIcon.className = 'fas fa-volume-up';
+                    musicToggle.classList.remove('muted');
+                    console.log('Background music started on user interaction');
+                })
+                .catch(err => {
+                    console.error('Failed to play music:', err);
+                });
+            
+            // Remove all event listeners
+            events.forEach(event => {
+                document.removeEventListener(event, playOnce);
+            });
+        }
+    };
+    
+    // Add listeners for multiple event types
+    events.forEach(event => {
+        document.addEventListener(event, playOnce, { once: true });
     });
 }
 
