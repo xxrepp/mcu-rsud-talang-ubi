@@ -6,6 +6,7 @@ let lastScrollTime = 0;
 let scrollAccumulator = 0;
 const SCROLL_THRESHOLD = 150; // Pixels needed to trigger page change
 let isMusicPlaying = false;
+let userMutedMusic = false; // Track if user manually muted
 const PAGE_TRANSITION_DELAY = 800; // Time to wait before allowing next page change
 let lastPageChangeTime = 0;
 
@@ -115,16 +116,18 @@ function toggleMusic() {
     if (isMusicPlaying) {
         backgroundMusic.pause();
         isMusicPlaying = false;
+        userMutedMusic = true; // User manually muted
         musicIcon.className = 'fas fa-volume-mute';
         musicToggle.classList.add('muted');
-        console.log('Music muted');
+        console.log('Music muted by user');
     } else {
         backgroundMusic.play()
             .then(() => {
                 isMusicPlaying = true;
+                userMutedMusic = false; // User manually unmuted
                 musicIcon.className = 'fas fa-volume-up';
                 musicToggle.classList.remove('muted');
-                console.log('Music playing');
+                console.log('Music unmuted by user');
             })
             .catch(err => {
                 console.error('Failed to play music:', err);
@@ -134,6 +137,12 @@ function toggleMusic() {
 
 // Helper function to try starting music
 function tryStartMusic() {
+    // Don't auto-start if user has manually muted the music
+    if (userMutedMusic) {
+        console.log('Music auto-start blocked - user has muted music');
+        return;
+    }
+    
     if (!isMusicPlaying && backgroundMusic) {
         backgroundMusic.play()
             .then(() => {
